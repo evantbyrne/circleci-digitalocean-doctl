@@ -8,6 +8,12 @@ jobs:
       - run: ls -Al
 
       - run:
+          name: Install jq
+          command: |
+            sudo apt update
+            sudo apt-get -y install jq
+
+      - run:
           name: Install doctl
           command: |
             wget https://github.com/digitalocean/doctl/releases/download/v1.45.1/doctl-1.45.1-linux-amd64.tar.gz
