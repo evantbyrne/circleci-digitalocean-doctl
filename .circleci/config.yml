@@ -10,8 +10,9 @@ jobs:
       - run:
           name: Install jq
           command: |
-            sudo apt update
-            sudo apt-get -y install jq
+            wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            sudo chmod +rx jq-linux64
+            sudo mv jq-linux64 /usr/local/bin/jq
 
       - run:
           name: Install doctl
