@@ -6,6 +6,21 @@ jobs:
     steps:
       - checkout
       - run: ls -Al
+
+      - run:
+        name: Install doctl
+        command: |
+          wget https://github.com/digitalocean/doctl/releases/download/v1.45.1/doctl-1.45.1-linux-amd64.tar.gz
+          tar xf ~/doctl-1.45.1-linux-amd64.tar.gz
+          sudo mv ~/doctl /usr/local/bin
+
+      - run:
+        name: Create droplet
+        command: |
+          doctl compute droplet create nginx-live-01 --image 64640395 --ssh-keys $(doctl compute ssh-key list --output json | jq "map(.id) | join(\",\")") --region nyc1 --size s-1vcpu-1gb --output json --wait > create.json
+          droplet_ip=$(cat create.json | jq ".[0].networks.v4[0].ip_address" --raw-output)
+          ssh -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $(echo "root@$droplet_ip") "whoami"
+          scp -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null public/* $(echo "root@$droplet_ip:/var/www/html")
 workflows:
   version: 2
   setup:
