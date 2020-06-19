@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    steps:
+      - checkout
+      - run: ls -Al
+workflows:
+  version: 2
+  setup:
+    jobs:
+      - build
