@@ -33,10 +33,13 @@ jobs:
             scp -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null public/* $(echo "root@$droplet_ip:/var/www/html")
 
       - run:
-          name: Delete old droplet
+          name: Swap droplets
           command: |
             doctl compute droplet list --output json > tmp/list.json
+            droplet_new_id=$(cat tmp/create.json | jq ".[0].id")
             droplet_old_id=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-master-\"))) | sort_by(\".id\") | .[0].id")
+            doctl compute load-balancer add-droplets $DO_LOAD_BALANCER --droplet-ids $droplet_new_id
+            doctl compute load-balancer remove-droplets $DO_LOAD_BALANCER --droplet-ids $droplet_old_id
             doctl compute droplet delete $droplet_old_id -f --output json > tmp/delete.json
 
 workflows:
