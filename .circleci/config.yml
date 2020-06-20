@@ -31,6 +31,13 @@ jobs:
             droplet_ip=$(cat tmp/create.json | jq ".[0].networks.v4[0].ip_address" --raw-output)
             for i in {1..5}; do ssh -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null "root@$droplet_ip" "whoami" && break || sleep 5; done
             scp -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null public/* $(echo "root@$droplet_ip:/var/www/html")
+
+      - run:
+          name: Delete old droplet
+          command: |
+            droplet_old_id=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-master-\"))) | sort_by(\".id\") | .[0].id")
+            doctl compute droplet delete $droplet_old_id -f --output json > tmp/delete.json
+
 workflows:
   version: 2
   setup:
