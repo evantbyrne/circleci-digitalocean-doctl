@@ -35,6 +35,7 @@ jobs:
       - run:
           name: Delete old droplet
           command: |
+            doctl compute droplet list --output json > tmp/list.json
             droplet_old_id=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-master-\"))) | sort_by(\".id\") | .[0].id")
             doctl compute droplet delete $droplet_old_id -f --output json > tmp/delete.json
 
