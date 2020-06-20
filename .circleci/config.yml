@@ -25,9 +25,10 @@ jobs:
       - run:
           name: Create droplet
           command: |
-            doctl compute droplet create nginx-live-01 --image 64640395 --ssh-keys $(doctl compute ssh-key list --output json | jq "map(.id) | join(\",\")") --region nyc1 --size s-1vcpu-1gb --output json --wait > create.json
+            droplet_name="nginx-$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM"
+            doctl compute droplet create $droplet_name --image 64640395 --ssh-keys $(doctl compute ssh-key list --output json | jq "map(.id) | join(\",\")") --region nyc1 --size s-1vcpu-1gb --output json --wait > create.json
             droplet_ip=$(cat create.json | jq ".[0].networks.v4[0].ip_address" --raw-output)
-            ssh -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null $(echo "root@$droplet_ip") "whoami"
+            for i in {1..5}; do ssh -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null "root@$droplet_ip" "whoami" && break || sleep 5; done
             scp -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null public/* $(echo "root@$droplet_ip:/var/www/html")
 workflows:
   version: 2
