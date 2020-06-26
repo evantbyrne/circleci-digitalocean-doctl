@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Check for load balancer
           command: |
-            doctl compute load-balancer list --outpt json > tmp/load-balancer.json
+            doctl compute load-balancer list --output json > tmp/load-balancer.json
             load_balancer_count=$(cat tmp/load-balancer.json | jq "map(select(.name == \"load-balancer-$CIRCLE_BRANCH\")) | length")
             if [ $load_balancer_count -ne 1 ]; then
               circleci-agent step halt
