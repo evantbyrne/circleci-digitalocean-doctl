@@ -50,7 +50,7 @@ jobs:
             load_balancer_id=$(cat tmp/load-balancer.json | jq "map(select(.name == \"load-balancer-$CIRCLE_BRANCH\")) | .[0].id" --raw-output)
             doctl compute load-balancer add-droplets $load_balancer_id --droplet-ids $droplet_new_id
             if [ $droplet_count -gt 1 ]; then
-              droplet_old_id=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-master-\"))) | sort_by(\".id\") | .[0].id")
+              droplet_old_id=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-$CIRCLE_BRANCH-\"))) | sort_by(\".id\") | .[0].id")
               doctl compute load-balancer remove-droplets $load_balancer_id --droplet-ids $droplet_old_id
               doctl compute droplet delete $droplet_old_id -f --output json > tmp/delete.json
             fi
