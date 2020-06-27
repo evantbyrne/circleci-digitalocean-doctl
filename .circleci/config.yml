@@ -23,37 +23,10 @@ jobs:
             doctl auth init --access-token $DO_ACCESS_TOKEN
 
       - run:
-          name: Check for load balancer
+          name: Deploy
           command: |
-            doctl compute load-balancer list --output json > tmp/load-balancer.json
-            load_balancer_count=$(cat tmp/load-balancer.json | jq "map(select(.name == \"load-balancer-$CIRCLE_BRANCH\")) | length")
-            if [ $load_balancer_count -ne 1 ]; then
-              circleci-agent step halt
-            fi
-
-      - run:
-          name: Create droplet
-          command: |
-            droplet_keys=$(doctl compute ssh-key list --output json | jq "map(.id) | join(\",\")")
-            droplet_name="nginx-$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM"
-            doctl compute droplet create $droplet_name --image $DO_IMAGE --ssh-keys $droplet_keys --region $DO_REGION --size $DO_SIZE --output json --wait > tmp/create.json
-            droplet_ip=$(cat tmp/create.json | jq ".[0].networks.v4[0].ip_address" --raw-output)
-            for i in {1..5}; do ssh -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null "root@$droplet_ip" "whoami" && break || sleep 5; done
-            scp -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null public/* $(echo "root@$droplet_ip:/var/www/html")
-
-      - run:
-          name: Swap droplets
-          command: |
-            doctl compute droplet list --output json > tmp/list.json
-            droplet_count=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-$CIRCLE_BRANCH-\"))) | length")
-            droplet_new_id=$(cat tmp/create.json | jq ".[0].id")
-            load_balancer_id=$(cat tmp/load-balancer.json | jq "map(select(.name == \"load-balancer-$CIRCLE_BRANCH\")) | .[0].id" --raw-output)
-            doctl compute load-balancer add-droplets $load_balancer_id --droplet-ids $droplet_new_id
-            if [ $droplet_count -gt 1 ]; then
-              droplet_old_id=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-$CIRCLE_BRANCH-\"))) | sort_by(\".id\") | .[0].id")
-              doctl compute load-balancer remove-droplets $load_balancer_id --droplet-ids $droplet_old_id
-              doctl compute droplet delete $droplet_old_id -f --output json > tmp/delete.json
-            fi
+            sudo chmod +rx bin/deploy.sh
+            ./bin/deploy.sh $CIRCLE_BRANCH $CIRCLE_BUILD_NUM $DO_IMAGE $DO_REGION $DO_SIZE
 
 workflows:
   version: 2
