@@ -5,9 +5,9 @@ set -e
 set -o pipefail
 
 # Positional arguments.
-build_branch=${1}         # Supplied by `$CIRCLE_BRANCH`.
-build_number=${2}         # Supplied by `$CIRCLE_BUILD_NUM`.
-do_image=${3}             # Supplied by `$DO_IMAGE`.
+build_branch=${1}          # Supplied by `$CIRCLE_BRANCH`.
+build_number=${2}          # Supplied by `$CIRCLE_BUILD_NUM`.
+do_image=${3}              # Supplied by `$DO_IMAGE`.
 do_region=${4:-nyc1}       # Supplied by `$DO_REGION`.
 do_size=${5:-s-1vcpu-1gb}  # Supplied by `$DO_SIZE`.
 
@@ -25,8 +25,6 @@ if [ "$do_image" = "" ]; then
   echo "Error: Missing positional argument 'do_image'."
   exit 1
 fi
-
-echo "x" > tmp/x.txt
 
 # Exit here if the load balancer does not exist. Using `circleci-agent step halt`
 # rather than `exit 1` prevents CircleCI from showing it as a failed run.
