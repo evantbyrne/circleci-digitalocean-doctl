@@ -26,7 +26,7 @@ jobs:
           name: Deploy
           command: |
             sudo chmod +rx bin/deploy.sh
-            ./bin/deploy.sh $CIRCLE_BRANCH $CIRCLE_BUILD_NUM $DO_IMAGE $DO_REGION $DO_SIZE
+            ./bin/deploy.sh $CIRCLE_BRANCH $CIRCLE_BUILD_NUM $DO_IMAGE $DO_REGION $DO_SIZE || circleci-agent step halt
 
 workflows:
   version: 2

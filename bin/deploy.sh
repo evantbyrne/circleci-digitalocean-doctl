@@ -26,13 +26,12 @@ if [ "$do_image" = "" ]; then
   exit 1
 fi
 
-# Exit here if the load balancer does not exist. Using `circleci-agent step halt`
-# rather than `exit 1` prevents CircleCI from showing it as a failed run.
+# Exit here if the load balancer does not exist.
 doctl compute load-balancer list --output json > tmp/load-balancer.json
 load_balancer_count=$(cat tmp/load-balancer.json | jq "map(select(.name == \"load-balancer-$build_branch\")) | length")
 if [ $load_balancer_count -ne 1 ]; then
   echo "Error: Load balancer with name 'load-balancer-$build_branch' not found."
-  circleci-agent step halt
+  exit 1
 fi
 
 # Create droplet.
