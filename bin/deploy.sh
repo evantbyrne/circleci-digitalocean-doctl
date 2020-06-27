@@ -36,9 +36,9 @@ fi
 
 # Create droplet.
 droplet_keys=$(doctl compute ssh-key list --output json | jq "map(.id) | join(\",\")")
-droplet_name="nginx-$build_branch-$build_number"
+droplet_name="nginx-$build_branch"
 echo "Create droplet {image:$do_image name:$droplet_name region:$do_region size:$do_size}"
-doctl compute droplet create $droplet_name --image $do_image --ssh-keys $droplet_keys --region $do_region --size $do_size --output json --wait > tmp/create.json
+doctl compute droplet create $droplet_name --image $do_image --ssh-keys $droplet_keys --region $do_region --size $do_size --tag-names "nginx,$build_number" --output json --wait > tmp/create.json
 droplet_ip=$(cat tmp/create.json | jq ".[0].networks.v4[0].ip_address" --raw-output)
 
 # Wait for SSH connection.
@@ -51,7 +51,7 @@ scp -q -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null public/* $(echo
 
 # Add new droplet to load balancer.
 doctl compute droplet list --output json > tmp/list.json
-droplet_count=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-$build_branch-\"))) | length")
+droplet_count=$(cat tmp/list.json | jq "map(select(.name == \"nginx-$build_branch\")) | length")
 droplet_new_id=$(cat tmp/create.json | jq ".[0].id")
 load_balancer_id=$(cat tmp/load-balancer.json | jq "map(select(.name == \"load-balancer-$build_branch\")) | .[0].id" --raw-output)
 echo "Add droplet to load balancer {droplet_id:$droplet_new_id load_balancer_id:$load_balancer_id}"
@@ -59,7 +59,7 @@ doctl compute load-balancer add-droplets $load_balancer_id --droplet-ids $drople
 
 # Delete old droplet.
 if [ $droplet_count -gt 1 ]; then
-  droplet_old_id=$(cat tmp/list.json | jq "map(select(.name | startswith(\"nginx-$build_branch-\"))) | sort_by(\".id\") | .[0].id")
+  droplet_old_id=$(cat tmp/list.json | jq "map(select(.name == \"nginx-$build_branch\")) | sort_by(\".id\") | .[0].id")
   echo "Remove droplet to load balancer {droplet_id:$droplet_old_id load_balancer_id:$load_balancer_id}"
   doctl compute load-balancer remove-droplets $load_balancer_id --droplet-ids $droplet_old_id
   echo "Delete droplet {id:$droplet_old_id}"
