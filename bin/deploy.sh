@@ -70,6 +70,9 @@ done
 if [ "$droplet_old_ids" != "" ]; then
   echo "Remove droplets from load balancer {droplet_ids:$droplet_old_ids load_balancer_id:$load_balancer_id}"
   doctl compute load-balancer remove-droplets $load_balancer_id --droplet-ids $droplet_old_ids
-  echo "Delete droplets {id:$droplet_old_ids}"
-  doctl compute droplet delete $droplet_old_ids -f --output json > tmp/delete.json
+  IFS=',' read -ra ARR <<< $droplet_old_ids
+  for droplet_delete_id in "${ARR[@]}"; do
+    echo "Delete droplet {id:$droplet_delete_id}"
+    doctl compute droplet delete $droplet_delete_id -f --output json > tmp/delete.json
+  done
 fi
